@@ -11,7 +11,7 @@ from api.v1.views import app_views
 
 myapp = Flask(__name__)
 
-# enable CORS and allow for origins:
+# enable CORS and allowingg for origins
 CORS(myapp, resources={r'/api/v1/*': {'origins': '0.0.0.0'}})
 
 myapp.register_blueprint(app_views)
