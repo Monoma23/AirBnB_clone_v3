@@ -1,34 +1,42 @@
 #!/usr/bin/python3
-"""Main module for the Flask web application."""
-import os
+'''
+Creating Flask myapp & register blueprint app_views to Flask instance myapp
+'''
 
-from flask import Flask
+from os import getenv
+from flask import Flask, jsonify
 from flask_cors import CORS
-
-from api.v1.views import app_views
 from models import storage
+from api.v1.views import app_views
 
-# Create a Flask app
-web_app = Flask(__name__)
-CORS(web_app, resources={r"/*": {"origins": "0.0.0.0"}})
+myapp = Flask(__name__)
 
-# Register the blueprint for API routes
-web_app.register_blueprint(app_views, url_prefix="/api/v1")
+# enable CORS and allow for origins:
+CORS(myapp, resources={r'/api/v1/*': {'origins': '0.0.0.0'}})
+
+myapp.register_blueprint(app_views)
+myapp.url_map.strict_slashes = False
 
 
-@web_app.teardown_appcontext
-def close_db_session(app_context):
-    """Close the database session after each request."""
+@myapp.teardown_appcontext
+def teardown_engin(exception):
+    '''
+    removing current SQLAlchemy session obj after each request
+    '''
     storage.close()
 
 
-@web_app.errorhandler(404)
-def handle_not_found(error):
-    """Handle 404 errors by returning a JSON response."""
-    return {"error": "Not found"}, 404
+# error handlers for expected myapp behavior
+@myapp.errorhandler(404)
+def not_found(error):
+    '''
+    returning error msg `Not Found`
+    '''
+    response = {'error': 'Not found'}
+    return jsonify(response), 404
 
 
-if __name__ == "__main__":
-    HOST = os.getenv('WEB_API_HOST', "0.0.0.0")
-    PORT = int(os.getenv('WEB_API_PORT', 5000))
-    web_app.run(host=HOST, port=PORT, threaded=True)
+if __name__ == '__main__':
+    HOST = getenv('HBNB_API_HOST', '0.0.0.0')
+    PORT = int(getenv('HBNB_API_PORT', 5000))
+    myapp.run(host=HOST, port=PORT, threaded=True)
